@@ -5,6 +5,7 @@
 ### Fixed
 
 - Fix a bug where we render an empty message list
+- Fix refresh "empty chat" info meassage on chat changes
 
 ## [1.13.0] - 2020-10-1
 
