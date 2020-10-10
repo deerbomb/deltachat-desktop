@@ -71,7 +71,7 @@ export default class DCSettings extends SplitOut {
     app.saveState({ saved })
 
     if (key === 'minimizeToTray') updateTrayIcon()
-    
+
     return true
   }
 
