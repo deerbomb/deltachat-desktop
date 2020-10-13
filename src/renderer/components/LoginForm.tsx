@@ -19,8 +19,10 @@ import {
   DeltaDialogContent,
   DeltaDialogFooter,
 } from './dialogs/DeltaDialog'
-import { Credentials } from '../../shared/shared-types'
+import { Credentials, DeltaChatAccount } from '../../shared/shared-types'
 import { useTranslationFunction, i18nContext } from '../contexts'
+import { useDebouncedCallback } from 'use-debounce/lib'
+import { isValidEmail } from '../../shared/util'
 
 const getDefaultPort = (credentials: Credentials, protocol: string) => {
   const SendSecurityPortMap = {
@@ -116,15 +118,21 @@ export default function LoginForm({
     setCredentials(updatedCredentials)
   }
 
-  const emailChange = async (
+  const [debouncedGetProviderInfo] = useDebouncedCallback(
+    async (addr: string) => {
+      const result: any = await DeltaBackend.call('getProviderInfo', addr)
+      setProviderInfo(result || null)
+    },
+    300,
+    { trailing: true }
+  )
+
+  const onEmailChange = (
     event: React.FormEvent<HTMLElement> & React.ChangeEvent<HTMLInputElement>
   ) => {
     handleCredentialsChange(event)
-    const result = (await DeltaBackend.call(
-      'getProviderInfo',
-      event.target.value
-    )) as any
-    setProviderInfo(result || null)
+    const email = event.target.value
+    isValidEmail(email) && debouncedGetProviderInfo(email)
   }
 
   const {
@@ -155,7 +163,7 @@ export default function LoginForm({
             placeholder={tx('email_address')}
             disabled={addrDisabled}
             value={addr}
-            onChange={emailChange.bind(this)}
+            onChange={onEmailChange}
           />
 
           <DeltaPasswordInput
@@ -319,48 +327,57 @@ export function ConfigureProgressDialog({
 }: DialogProps) {
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
+  const [configureFailed, setConfigureFailed] = useState(false)
 
   const onConfigureProgress = (_: null, [progress, _data2]: [number, null]) =>
-    setProgress(progress)
+    progress !== 0 && setProgress(progress)
 
   const onCancel = (event: any) => {
     DeltaBackend.call('stopOngoingProcess')
     onClose()
   }
 
-  const onConfigureSuccessful = () => {
+  const onConfigureSuccessful = (account: DeltaChatAccount) => {
     onClose()
-    onSuccess && onSuccess()
+    onSuccess && onSuccess(account)
   }
-  const onConfigureFailed = (_: null, [data1, data2]: [null, string]) =>
+  const onConfigureError = (_: null, [data1, data2]: [null, string]) =>
     setError(data2)
+
+  const onConfigureFailed = (_: null, [data1, data2]: [null, string]) =>
+    setConfigureFailed(true)
 
   useEffect(() => {
     ;(async () => {
       if (mode === 'update') {
         DeltaBackend.call('login.updateCredentials', credentials)
       } else {
+        let account: DeltaChatAccount = null
         try {
-          await DeltaBackend.call('login.newLogin', credentials)
+          account = await DeltaBackend.call('login.newLogin', credentials)
         } catch (err) {
-          if (err) onConfigureFailed(null, [null, err])
+          if (err) {
+            onConfigureError(null, [null, err])
+            onConfigureFailed(null, [null, null])
+          }
+          return
         }
+        if (account !== null) onConfigureSuccessful(account)
       }
     })()
 
     ipcBackend.on('DC_EVENT_CONFIGURE_PROGRESS', onConfigureProgress)
-    ipcBackend.on('DCN_EVENT_CONFIGURE_SUCCESSFUL', onConfigureSuccessful)
-    ipcBackend.on('DC_EVENT_ERROR', onConfigureFailed)
+    ipcBackend.on('DCN_EVENT_CONFIGURE_FAILED', onConfigureFailed)
+    ipcBackend.on('DC_EVENT_ERROR', onConfigureError)
+    ipcBackend.on('DC_EVENT_ERROR_NETWORK', onConfigureError)
     return () => {
       ipcBackend.removeListener(
         'DC_EVENT_CONFIGURE_PROGRESS',
         onConfigureProgress
       )
-      ipcBackend.removeListener(
-        'DCN_EVENT_CONFIGURE_SUCCESSFUL',
-        onConfigureSuccessful
-      )
-      ipcBackend.removeListener('DC_EVENT_ERROR', onConfigureFailed)
+      ipcBackend.removeListener('DCN_EVENT_CONFIGURE_FAILED', onConfigureFailed)
+      ipcBackend.removeListener('DC_EVENT_ERROR', onConfigureError)
+      ipcBackend.removeListener('DC_EVENT_ERROR_NETWORK', onConfigureError)
     }
   }, [])
 
@@ -368,7 +385,7 @@ export function ConfigureProgressDialog({
 
   return (
     <SmallDialog isOpen={isOpen} onClose={onClose}>
-      {!error && (
+      {!configureFailed && (
         <>
           <div className='bp3-dialog-body-with-padding'>
             <DeltaDialogContent>
@@ -389,7 +406,7 @@ export function ConfigureProgressDialog({
           </DeltaDialogFooter>
         </>
       )}
-      {error && (
+      {configureFailed && (
         <>
           <div className='bp3-dialog-body-with-padding'>
             <DeltaDialogContent>

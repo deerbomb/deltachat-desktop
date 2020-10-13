@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect } from 'react'
 import { SettingsContext, i18nContext } from './contexts'
 import ScreenController, { Screens } from './ScreenController'
 import { sendToBackend, ipcBackend, startBackendLogging } from './ipc'
@@ -7,7 +7,6 @@ import {
   AppState,
   DeltaChatAccount,
   DesktopSettings,
-  Credentials,
 } from '../shared/shared-types'
 
 import { translate, LocaleData } from '../shared/localize'
@@ -19,6 +18,7 @@ const log = getLogger('renderer/App')
 import moment from 'moment'
 import { CrashScreen } from './components/CrashScreen'
 import { getDefaultState } from '../shared/state'
+const { ipcRenderer } = window.electron_functions
 
 attachKeybindingsListener()
 
@@ -26,9 +26,10 @@ attachKeybindingsListener()
 export const theme_manager = ThemeManager
 
 export default function App(props: any) {
-  const [state, setState] = useState<AppState>(getDefaultState())
+  const [state, setState] = useState<AppState>(null)
 
   const [localeData, setLocaleData] = useState<LocaleData | null>(null)
+  const [account, setAccount] = useState<DeltaChatAccount>(null)
 
   useEffect(() => {
     sendToBackend('ipcReady')
@@ -60,23 +61,30 @@ export default function App(props: any) {
     })
   }, [])
 
-  useEffect(() => {
+  const loadAccount = async (account: DeltaChatAccount) => {
+    await DeltaBackend.call('login.loadAccount', account)
+    setAccount(account)
+    if (typeof window.__changeScreen === 'function') {
+      window.__changeScreen(Screens.Main)
+    } else {
+      window.addEventListener('frontendReady', () => {
+        window.__changeScreen(Screens.Main)
+      })
+    }
+  }
+
+  useLayoutEffect(() => {
     startBackendLogging()
     ;(async () => {
       const state = await DeltaBackend.call('getState')
       await reloadLocaleData(state.saved.locale)
-      setState(state)
       const lastLoggedInAccount: DeltaChatAccount = await DeltaBackend.call(
         'login.getLastLoggedInAccount'
       )
-      if (!lastLoggedInAccount) return
 
-      await DeltaBackend.call('login.loadAccount', lastLoggedInAccount)
-      if (typeof window.__changeScreen === 'function') {
-        window.__changeScreen(Screens.Main)
-      } else {
-        throw new Error('window.__changeScreen is not a function')
-      }
+      if (lastLoggedInAccount) loadAccount(lastLoggedInAccount)
+
+      setState(state)
     })()
   }, [])
 
@@ -103,22 +111,22 @@ export default function App(props: any) {
     }
   }, [localeData])
 
-  if (!localeData) return null
+  if (!localeData || !state) return null
   return (
     <CrashScreen>
-      <SettingsContextWrapper credentials={state.deltachat.credentials}>
+      <SettingsContextWrapper account={account}>
         <i18nContext.Provider value={window.static_translate}>
-          <ScreenController deltachat={state.deltachat} />
+          <ScreenController account={account} loadAccount={loadAccount} />
         </i18nContext.Provider>
       </SettingsContextWrapper>
     </CrashScreen>
   )
 }
 export function SettingsContextWrapper({
-  credentials,
+  account,
   children,
 }: {
-  credentials: Credentials
+  account: DeltaChatAccount
   children: React.ReactChild
 }) {
   const [desktopSettings, _setDesktopSettings] = useState<DesktopSettings>(null)
@@ -150,7 +158,7 @@ export function SettingsContextWrapper({
 
   return (
     <SettingsContext.Provider
-      value={{ desktopSettings, setDesktopSetting, credentials }}
+      value={{ desktopSettings, setDesktopSetting, account }}
     >
       {children}
     </SettingsContext.Provider>

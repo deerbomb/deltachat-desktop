@@ -15,6 +15,7 @@ import DialogController, {
 import processOpenQrUrl from './components/helpers/OpenQrUrl'
 
 import { getLogger } from '../shared/logger'
+import { ContextMenuLayer, showFnType } from './components/ContextMenu'
 
 const log = getLogger('renderer/ScreenController')
 
@@ -30,12 +31,14 @@ export enum Screens {
 
 export default class ScreenController extends Component {
   dialogController: React.RefObject<DialogController>
+  contextMenuShowFn: showFnType = null
   state: { message: userFeedback | false; screen: Screens }
   onShowAbout: any
 
   constructor(
     public props: {
-      deltachat: AppState['deltachat']
+      account: DeltaChatAccount
+      loadAccount: (login: DeltaChatAccount) => {}
     }
   ) {
     super(props)
@@ -48,6 +51,7 @@ export default class ScreenController extends Component {
     this.onSuccess = this.onSuccess.bind(this)
     this.userFeedback = this.userFeedback.bind(this)
     this.userFeedbackClick = this.userFeedbackClick.bind(this)
+    this.openContextMenu = this.openContextMenu.bind(this)
     this.openDialog = this.openDialog.bind(this)
     this.changeScreen = this.changeScreen.bind(this)
     this.closeDialog = this.closeDialog.bind(this)
@@ -58,7 +62,12 @@ export default class ScreenController extends Component {
     window.__userFeedback = this.userFeedback.bind(this)
     window.__closeDialog = this.closeDialog.bind(this)
     window.__changeScreen = this.changeScreen.bind(this)
+    window.__loadAccount = this.loadAccount.bind(this)
     window.__screen = this.state.screen
+  }
+
+  loadAccount(account: DeltaChatAccount) {
+    this.props.loadAccount(account)
   }
 
   userFeedback(message: userFeedback | false) {
@@ -86,6 +95,7 @@ export default class ScreenController extends Component {
     ipcRenderer.on('open-url', this.onOpenUrl)
 
     ipcRenderer.send('frontendReady')
+    window.dispatchEvent(new Event('frontendReady'))
   }
 
   componentWillUnmount() {
@@ -101,6 +111,9 @@ export default class ScreenController extends Component {
   onError(_event: any, [data1, data2]: [string | number, string]) {
     if (this.state.screen === Screens.Login) return
     if (data1 === 0) data1 = ''
+    // Can get removed as soon as we use a rust core including this fix: https://github.com/deltachat/deltachat-core-rust/pull/1911
+    if (data2 === 'dc_continue_key_transfer: "invalid symmetric key algorithm"')
+      return
     const text = data1 + data2
     this.userFeedback({ type: 'error', text })
   }
@@ -118,11 +131,18 @@ export default class ScreenController extends Component {
   }
 
   openDialog(...args: Parameters<OpenDialogFunctionType>) {
-    this.dialogController.current.openDialog(...args)
+    return this.dialogController.current.openDialog(...args)
   }
 
   closeDialog(...args: Parameters<CloseDialogFunctionType>) {
     this.dialogController.current.closeDialog(...args)
+  }
+
+  openContextMenu(...args: Parameters<showFnType>) {
+    if (!this.contextMenuShowFn) {
+      throw new Error('Context Menu Controller not available')
+    }
+    this.contextMenuShowFn(...args)
   }
 
   renderScreen() {
@@ -130,15 +150,18 @@ export default class ScreenController extends Component {
       case Screens.Main:
         return <MainScreen />
       case Screens.Login:
-        return <LoginScreen deltachat={this.props.deltachat} />
+        return <LoginScreen loadAccount={this.props.loadAccount} />
     }
   }
 
   render() {
-    const { deltachat } = this.props
-
     return (
       <div>
+        <ContextMenuLayer
+          setShowFunction={showFn => {
+            this.contextMenuShowFn = showFn
+          }}
+        />
         {this.state.message && (
           <div
             onClick={this.userFeedbackClick}
@@ -150,6 +173,7 @@ export default class ScreenController extends Component {
         <ScreenContext.Provider
           value={{
             openDialog: this.openDialog,
+            openContextMenu: this.openContextMenu,
             closeDialog: this.closeDialog,
             userFeedback: this.userFeedback,
             changeScreen: this.changeScreen,
@@ -159,7 +183,7 @@ export default class ScreenController extends Component {
           {this.renderScreen()}
           <DialogController
             ref={this.dialogController}
-            deltachat={deltachat}
+            account={this.props.account}
             userFeedback={this.userFeedback}
           />
         </ScreenContext.Provider>

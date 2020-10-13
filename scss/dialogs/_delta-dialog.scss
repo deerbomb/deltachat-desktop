@@ -4,7 +4,6 @@
     padding-bottom: 0px !important;
     background-color: var(--bp3DialogBgPrimary) !important;
     .bp3-dialog-footer {
-      margin-top: 16px;
       padding: 0 0px 0px;
     }
   }
@@ -86,6 +85,11 @@
     &.bold {
       letter-spacing: 2px;
       font-weight: bold;
+    }
+
+    &.light-bold {
+      letter-spacing: 1px;
+      font-weight: 100;
     }
 
     &.primary {

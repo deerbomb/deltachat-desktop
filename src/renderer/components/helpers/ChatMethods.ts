@@ -43,20 +43,29 @@ export function openLeaveChatDialog(
   screenContext.openDialog('ConfirmationDialog', {
     message: tx('ask_leave_group'),
     confirmLabel: tx('menu_leave_group'),
+    isConfirmDanger: true,
+    noMargin: true,
     cb: (yes: boolean) => yes && DeltaBackend.call('chat.leaveGroup', chatId),
   })
 }
 
 export function openDeleteChatDialog(
   screenContext: unwrapContext<typeof ScreenContext>,
-  chat: Chat
+  chat: Chat,
+  selectedChatId: number
 ) {
   const tx = window.static_translate
   screenContext.openDialog('ConfirmationDialog', {
     message: tx('ask_delete_chat_desktop', chat.name),
     confirmLabel: tx('delete'),
+    isConfirmDanger: true,
     cb: (yes: boolean) =>
-      yes && DeltaBackend.call('chat.delete', chat.id).then(unselectChat),
+      yes &&
+      DeltaBackend.call('chat.delete', chat.id).then(() => {
+        if (selectedChatId === chat.id) {
+          unselectChat()
+        }
+      }),
   })
 }
 
@@ -69,6 +78,7 @@ export function openBlockContactDialog(
     screenContext.openDialog('ConfirmationDialog', {
       message: tx('ask_block_contact'),
       confirmLabel: tx('menu_block_contact'),
+      isConfirmDanger: true,
       cb: (yes: boolean) =>
         yes &&
         DeltaBackend.call(

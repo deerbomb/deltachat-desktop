@@ -3,12 +3,6 @@ import { AppState } from './shared-types'
 export function getDefaultState(): AppState {
   return {
     /**
-     * Temporary state.
-     */
-    deltachat: {
-      credentials: { addr: null },
-    },
-    /**
      * Persisted state. Must be JSON.
      */
     saved: {
@@ -21,7 +15,6 @@ export function getDefaultState(): AppState {
       lastAccount: undefined,
       enableAVCalls: false,
       enableOnDemandLocationStreaming: false,
-      enableDisappearingMessages: false,
       chatViewBgImg: undefined,
       lastChats: {},
       zoomFactor: 1,

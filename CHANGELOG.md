@@ -2,6 +2,83 @@
 
 ## [Unreleased][unreleased]
 
+# Added
+- Upgrade Emoji Picker(Emoji 12.1) and emojifont(Unicode 13.1) for new emoji support 🦾
+
+### Changed
+- Change "More info" translation to "Message Details"
+- Through the emoji mart update, frequent emojis are now not sorted immediately, fixes #1177
+- gallery media display type is chosen via viewType now and if the mime type is not displayable by the browser an error is shown
+- minor gallery style adjustments 
+- Own Context Menu Implementation that makes development easier
+
+## Fixed
+
+- Fixed missing application icon for linux
+- Fixed unselecting current chat after deleting another chat
+- Fix hover color on emoji picker for light theme
+- Fix missing translations in emoji picker
+- Fix broken enlargen group image #1924
+
+## [1.13.1] - 2020-10-06
+
+### Changed
+
+- order media in gallery after sortTimestamp, newer ones up
+
+### Fixed
+
+- Fix a bug where we render an empty message list
+- Hide invalid options in menu (example: send video invitation in device chat)
+
+## [1.13.0] - 2020-10-01
+
+### Fixed
+
+- Fix search shows placeholders
+- Fix ok button not being a primary button in EncryptionInfo dialog
+- Fix handling of QrReader errors with own logger instead of console.error
+
+## [1.13.0-rc4] - 2020-10-01
+
+### Added
+
+- Added indicator icon if disappearing messages are enabled in a chat/group
+
+### Changed
+
+- Update deltachat-node to v1.45.0
+- run npm audit fix
+- Overhaul colors of login hint
+- Change "remove account" translation to "delete account"
+- Disappearing messages are now enabled by default and not experimental anymore
+
+### Fixed
+
+- Fix network errors not shown on failed login
+- Fix crash on settings after first login
+- Make sure login screen doesn't flash on slow devices
+- Fix logging of react crashes.
+- Fix confusing error message on wrong autocrypt setup message code
+- Fix automatically login to last remembered account
+- Fix scanning qr code and general improvement of the whole process
+- Fix avatar initials of the text avatars, of people with no displayname, inside of the messagelist
+- Fix refreshing message list when disappearing message timed out
+
+## [1.13.0-rc1] - 2020-08-13
+
+### Changed
+
+- Improve UX of changing/updating group & contact names, add buttons in those dialogs to the dialog footer
+- Overhaul QR Code dialog and condense scan/show qr code into one dialog
+- Implement welcome screen & overhaul login flow & account overview
+- Update deltachat-node to v1.44.0
+
+### Fixed
+
+- Fix sluggish ui while typing in email address in login form
+- Fix url parsing in labeled link confirmation dialog
+
 ## [1.12.0] - 2020-07-31
 
 ### Changed
@@ -17,6 +94,7 @@
 ## [1.10.3] - 2020-07-30
 
 ### Fixed
+
 - Fix labeled links (fix the regex, make it dumber)
 
 ## [1.10.2] - 2020-07-30
@@ -27,7 +105,6 @@
 - Fix messagelist not having a scrollbar sometimes
 - Fix settings dialog not closable with escape key
 - Fix "New contact" in search results
-
 
 ## [1.10.1] - 2020-07-29
 
@@ -902,7 +979,19 @@ This section is only relevant to contributors.
 
 **Historical Note 2** We removed the older changelog, you can look at the git history to get it. (version numbers made hallmark crazy)
 
-[unreleased]: https://github.com/deltachat/deltachat-desktop/compare/v1.10.3...HEAD
+[unreleased]: https://github.com/deltachat/deltachat-desktop/compare/v1.13.1...HEAD
+
+[1.13.1]: https://github.com/deltachat/deltachat-desktop/compare/v1.13.0...v1.13.1
+
+[1.13.0]: https://github.com/deltachat/deltachat-desktop/compare/v1.13.0-rc4...v1.13.0
+
+[1.13.0-rc4]: https://github.com/deltachat/deltachat-desktop/compare/v1.13.0-rc1...v1.13.0-rc4
+
+[1.13.0-rc1]: https://github.com/deltachat/deltachat-desktop/compare/v1.12.0...v1.13.0-rc1
+
+[1.12.0]: https://github.com/deltachat/deltachat-desktop/compare/v1.10.4...v1.12.0
+
+[1.10.4]: https://github.com/deltachat/deltachat-desktop/compare/v1.10.3...v1.10.4
 
 [1.10.3]: https://github.com/deltachat/deltachat-desktop/compare/v1.10.2...v1.10.3
 

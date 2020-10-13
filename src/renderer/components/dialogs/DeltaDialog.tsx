@@ -86,6 +86,7 @@ const DeltaDialog = React.memo<
         onClose={props.onClose}
         onClickBack={props.onClickBack}
         showBackButton={props.showBackButton}
+        isCloseButtonShown={props.isCloseButtonShown}
         title={props.title}
       />
       {props.children}
@@ -125,8 +126,16 @@ export function DeltaDialogHeader(props: {
   onClose?: DialogProps['onClose']
   children?: React.ReactNode
   showBackButton?: boolean
+  isCloseButtonShown?: boolean
 }) {
-  let { onClickBack, title, onClose, children, showBackButton } = props
+  let {
+    onClickBack,
+    title,
+    onClose,
+    children,
+    showBackButton,
+    isCloseButtonShown,
+  } = props
   if (typeof showBackButton === 'undefined')
     showBackButton = typeof onClickBack === 'function'
   return (
@@ -139,7 +148,7 @@ export function DeltaDialogHeader(props: {
       {showBackButton && <DeltaDialogBackButton onClick={onClickBack} />}
       {title && <h4 className='bp3-heading'>{title}</h4>}
       {children}
-      {typeof onClose === 'function' && (
+      {typeof onClose === 'function' && isCloseButtonShown !== false && (
         <DeltaDialogCloseButton onClick={onClose} />
       )}
     </div>
@@ -156,7 +165,7 @@ export function DeltaDialogFooter(
   if (typeof hide === 'undefined') hide = typeof children === 'undefined'
   return (
     <div
-      style={{ display: hide ? 'none' : 'unset', ...props.style }}
+      style={{ display: hide ? 'none' : 'block', ...props.style }}
       className={classNames(
         Classes.DIALOG_FOOTER,
         'bp3-dialog-footer-border-top'
@@ -293,27 +302,80 @@ export function SmallSelectDialog({
           </RadioGroup>
         </DeltaDialogContent>
       </DeltaDialogBody>
-      <DeltaDialogFooter
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginTop: '0px',
-          padding: '7px 13px 10px 13px',
-        }}
-      >
+      <DeltaDialogFooter style={{ marginTop: '0px', padding: '20px' }}>
+        <DeltaDialogFooterActions>
+          <p
+            className='delta-button primary bold'
+            onClick={() => {
+              onCancel && onCancel()
+              onClose()
+            }}
+          >
+            {tx('cancel')}
+          </p>
+          <p className='delta-button primary bold' onClick={saveAndClose}>
+            {tx('save_desktop')}
+          </p>
+        </DeltaDialogFooterActions>
+      </DeltaDialogFooter>
+    </SmallDialog>
+  )
+}
+
+export function DeltaDialogFooterActions({
+  children,
+  style,
+}: {
+  children: any
+  style?: any
+}) {
+  return (
+    <div
+      style={{ justifyContent: 'flex-end', ...style }}
+      className={Classes.DIALOG_FOOTER_ACTIONS}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function DeltaDialogOkCancelFooter({
+  onCancel,
+  onOk,
+}: {
+  onCancel: () => any
+  onOk: () => any
+}) {
+  const tx = window.static_translate
+
+  return (
+    <DeltaDialogFooter>
+      <DeltaDialogFooterActions>
         <p
-          className='delta-button danger bold'
-          onClick={() => {
-            onCancel && onCancel()
-            onClose()
-          }}
+          className='delta-button primary bold'
+          style={{ marginRight: '10px' }}
+          onClick={onCancel}
         >
           {tx('cancel')}
         </p>
-        <p className='delta-button primary bold' onClick={saveAndClose}>
-          {tx('save_desktop')}
+        <p className={'delta-button bold primary'} onClick={onOk}>
+          {tx('ok')}
         </p>
-      </DeltaDialogFooter>
-    </SmallDialog>
+      </DeltaDialogFooterActions>
+    </DeltaDialogFooter>
+  )
+}
+
+export function DeltaDialogCloseFooter({ onClose }: { onClose: () => any }) {
+  const tx = window.static_translate
+
+  return (
+    <DeltaDialogFooter>
+      <DeltaDialogFooterActions>
+        <p className={'delta-button bold primary'} onClick={onClose}>
+          {tx('close')}
+        </p>
+      </DeltaDialogFooterActions>
+    </DeltaDialogFooter>
   )
 }

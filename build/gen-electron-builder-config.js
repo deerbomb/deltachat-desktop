@@ -52,7 +52,6 @@ const files = [
   '!node_modules/emoji-js-clean/',
   '!node_modules/@mapbox/',
   '!node_modules/react/',
-  '!node_modules/react-contextmenu/',
   '!node_modules/react-transition-group/',
   '!node_modules/css-to-react-native',
   '!node_modules/simple-markdown',
@@ -138,6 +137,7 @@ build['linux'] = {
     keywords: 'dc;chat;delta;messaging;messenger;email',
   },
   files: [...files, PREBUILD_FILTERS.NOT_MAC, PREBUILD_FILTERS.NOT_WINDOWS],
+  icon: 'build/icon.icns', // electron builder gets the icon out of the mac icon archive
 }
 build['win'] = {
   icon: 'images/deltachat.ico',

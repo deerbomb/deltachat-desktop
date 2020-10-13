@@ -1,6 +1,6 @@
 {
   "menu_copy_selection_to_clipboard": {
-    "message": "Copy Selection"
+    "message": "Copy selection"
   },
   "menu_copy_link_to_clipboard": {
     "message": "Copy link"
@@ -60,9 +60,6 @@
     "one": "Send the following file to %s?",
     "other": "Send the following %d files to %s?"
   },
-  "remove_account": {
-    "message": "Remove account"
-  },
   "default_value": {
     "message": "Default (%1$s)"
   },
@@ -85,10 +82,10 @@
     "message": "QR code data"
   },
   "a11y_copy_qr_data": {
-    "message": "Copy Qr code data to clipboard"
+    "message": "Copied QR url to clipboard"
   },
   "copy_qr_data_success": {
-    "message": "Copied qr code data to clipboard"
+    "message": "Copied QR url to clipboard"
   },
   "global_menu_view_zoom_factor": {
     "message": "Zoom Factor"
@@ -161,5 +158,47 @@
   },
   "video_hangout_invitation": {
     "message": "Video Hangout Invitation"
+  },
+  "a11y_disappearing_messages_activated": {
+    "message": "Disapearing messages are active for this chat"
+  },
+  "can_not_display_unsuported_file_type":{
+    "message": "Can not display this file type: %s"
+  },
+  "attachment_failed_to_load":{
+    "message": "attachment failed to load"
+  },
+  "emoji_search_results": {
+    "message": "Search results"
+  },
+  "emoji_not_found": {
+    "message": "No emoji found"
+  },
+  "emoji_recent": {
+    "message": "Recently Used"
+  },
+  "emoji_people": {
+    "message": "People & Body"
+  },
+  "emoji_nature": {
+    "message": "Animals & Nature"
+  },
+  "emoji_foods": {
+    "message": "Food & Drink"
+  },
+  "emoji_activity": {
+    "message": "Activity"
+  },
+  "emoji_places": {
+    "message": "Travel & Places"
+  },
+  "emoji_objects": {
+    "message": "Objects"
+  },
+  "emoji_symbols": {
+    "message": "Symbols"
+  },
+  "emoji_flags": {
+    "message": "Flags"
   }
 }

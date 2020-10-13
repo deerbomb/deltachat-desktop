@@ -11,6 +11,7 @@ import {
   Credentials,
   DeltaChatAccount,
   DesktopSettings,
+  QrCodeResponse,
 } from '../shared/shared-types'
 import { MuteDuration } from '../shared/constants'
 import { LocaleData } from '../shared/localize'
@@ -31,17 +32,7 @@ class DeltaRemote {
   }>
   call(fnName: 'joinSecurejoin', qrCode: string): Promise<number>
   call(fnName: 'stopOngoingProcess'): Promise<number>
-  call(
-    fnName: 'checkQrCode',
-    qrCode: string
-  ): Promise<{
-    state: number
-    text1: string
-    text1Meaning: string
-    text2: string
-    timestamp: number
-    id: number
-  }>
+  call(fnName: 'checkQrCode', qrCode: string): Promise<QrCodeResponse>
   call(fnName: 'getNetworkStatus'): Promise<[boolean, string]>
   // autocrypt ----------------------------------------------------------
   call(fnName: 'autocrypt.initiateKeyTransfer'): Promise<string>
@@ -49,7 +40,7 @@ class DeltaRemote {
     fnName: 'autocrypt.continueKeyTransfer',
     messageId: number,
     key: string
-  ): Promise<number>
+  ): Promise<boolean>
   // backup -------------------------------------------------------------
   call(fnName: 'backup.export', dir: string): Promise<void>
   call(fnName: 'backup.import', file: string): Promise<DeltaChatAccount>
@@ -64,8 +55,14 @@ class DeltaRemote {
     queryContactId: number
   ): Promise<number[]>
   call(
-    fnName: 'chatList.getChatListItemsByIds',
-    chatIds: number[]
+    fnName: 'chatList.getChatListEntries',
+    listFlags: number,
+    queryStr: string,
+    queryContactId: number
+  ): Promise<[number, number][]>
+  call(
+    fnName: 'chatList.getChatListItemsByEntries',
+    entries: [number, number][]
   ): Promise<{
     [key: number]: ChatListItemType
   }>
@@ -190,7 +187,10 @@ class DeltaRemote {
     timestampTo: number
   ): Promise<JsonLocations>
   // login ----------------------------------------------------
-  call(fnName: 'login.newLogin', credentials: Credentials): Promise<void>
+  call(
+    fnName: 'login.newLogin',
+    credentials: Credentials
+  ): Promise<DeltaChatAccount>
   call(fnName: 'login.getLogins'): Promise<any>
   call(fnName: 'login.loadAccount', login: DeltaChatAccount): Promise<boolean>
   call(fnName: 'login.logout'): Promise<void>

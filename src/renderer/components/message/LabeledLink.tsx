@@ -2,10 +2,15 @@ import React, { useContext, useState } from 'react'
 import { ScreenContext } from '../../contexts'
 import { toASCII } from 'punycode'
 import { OpenDialogFunctionType } from '../dialogs/DialogController'
-import { SmallDialog } from '../dialogs/DeltaDialog'
-import { Classes } from '@blueprintjs/core'
+import {
+  SmallDialog,
+  DeltaDialogFooterActions,
+  DeltaDialogFooter,
+} from '../dialogs/DeltaDialog'
 import { DeltaCheckbox } from '../contact/ContactListItem'
 import { getLogger } from '../../../shared/logger'
+
+import UrlParser from 'url-parse'
 
 const log = getLogger('renderer/LabeledLink')
 
@@ -34,31 +39,35 @@ export const LabeledLink = ({
   target: string
 }) => {
   const { openDialog } = useContext(ScreenContext)
-  const splittedTarget = String(target).split('/')
+
+  const url = UrlParser(target)
   // encode the punycode to make phishing harder
-  const domain = (splittedTarget[2] = splittedTarget[2]
-    .split('.')
-    .map(toASCII)
-    .join('.'))
-  const sanitizedTarget = splittedTarget.join('/')
+  url.set(
+    'hostname',
+    url.hostname
+      .split('.')
+      .map(toASCII)
+      .join('.')
+  )
+
   const onClick = (ev: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     ev.preventDefault()
     ev.stopPropagation()
     //check if domain is trusted
-    if (isDomainTrusted(domain)) {
+    if (isDomainTrusted(url.hostname)) {
       openExternal(target)
       return
     }
     // not trusted - ask for confimation from user
     confirmationDialog(
       openDialog as OpenDialogFunctionType,
-      sanitizedTarget,
-      domain,
+      url.toString(),
+      url.hostname,
       target
     )
   }
   return (
-    <a href={'#' + target} title={sanitizedTarget} onClick={onClick}>
+    <a href={'#' + target} title={url.toString()} onClick={onClick}>
       {String(label)}
     </a>
   )
@@ -67,7 +76,7 @@ export const LabeledLink = ({
 function confirmationDialog(
   openDialog: OpenDialogFunctionType,
   sanitizedTarget: string,
-  domain: string,
+  hostname: string,
   target: string
 ) {
   openDialog(({ isOpen, onClose }) => {
@@ -91,22 +100,16 @@ function confirmationDialog(
             <DeltaCheckbox checked={isChecked} onClick={toggleIsChecked} />
             <div style={{ alignSelf: 'center' }}>
               {tx('open_external_url_trust_domain') + ' '}
-              <i>{domain}</i>
+              <i>{hostname}</i>
             </div>
           </div>
-          <div className={Classes.DIALOG_FOOTER}>
-            <div
-              className={Classes.DIALOG_FOOTER_ACTIONS}
-              style={{ justifyContent: 'space-between', marginTop: '7px' }}
-            >
-              <p
-                className={`delta-button no-padding bold primary`}
-                onClick={onClose}
-              >
+          <DeltaDialogFooter>
+            <DeltaDialogFooterActions>
+              <p className={`delta-button bold primary`} onClick={onClose}>
                 {tx('no')}
               </p>
               <p
-                className={`delta-button no-padding bold primary`}
+                className={`delta-button bold primary`}
                 onClick={() => {
                   onClose()
                   navigator.clipboard.writeText(target)
@@ -115,20 +118,20 @@ function confirmationDialog(
                 {tx('menu_copy_link_to_clipboard')}
               </p>
               <p
-                className={`delta-button no-padding bold primary`}
+                className={`delta-button bold primary`}
                 onClick={() => {
                   onClose()
                   if (isChecked) {
                     // trust url
-                    trustDomain(domain)
+                    trustDomain(hostname)
                   }
                   openExternal(target)
                 }}
               >
                 {tx('open')}
               </p>
-            </div>
-          </div>
+            </DeltaDialogFooterActions>
+          </DeltaDialogFooter>
         </div>
       </SmallDialog>
     )

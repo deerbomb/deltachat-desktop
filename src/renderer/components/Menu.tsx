@@ -54,7 +54,8 @@ export default function DeltaMenu(props: { selectedChat: FullChat }) {
   const onLeaveGroup = () => openLeaveChatDialog(screenContext, selectedChat.id)
   const onBlockContact = () =>
     openBlockContactDialog(screenContext, selectedChat)
-  const onDeleteChat = () => openDeleteChatDialog(screenContext, selectedChat)
+  const onDeleteChat = () =>
+    openDeleteChatDialog(screenContext, selectedChat, selectedChat.id)
   const onMuteChat = () => openMuteChatDialog(screenContext, selectedChat.id)
   const onUnmuteChat = () => unMuteChat(selectedChat.id)
   const onUnblockContacts = () =>
@@ -75,6 +76,8 @@ export default function DeltaMenu(props: { selectedChat: FullChat }) {
 
   if (selectedChat && selectedChat.id && !selectedChat.isDeaddrop) {
     const { isGroup, selfInGroup, isSelfTalk, isDeviceChat } = selectedChat
+
+    const isReadOnlyChat = (isGroup && !selfInGroup) || isDeviceChat // setting this as var because we plan to have more readonly chats in the future
 
     chatMenu = [
       <Menu.Divider key='divider1' />,
@@ -103,15 +106,17 @@ export default function DeltaMenu(props: { selectedChat: FullChat }) {
           }
         />
       ),
-      !isGroup && settingsContext.desktopSettings.enableAVCalls && (
-        <DeltaMenuItem
-          key='call'
-          text={tx('videochat')}
-          onClick={() => {
-            sendCallInvitation(screenContext, selectedChat.id)
-          }}
-        />
-      ),
+      !isGroup &&
+        settingsContext.desktopSettings.enableAVCalls &&
+        !isReadOnlyChat && (
+          <DeltaMenuItem
+            key='call'
+            text={tx('videochat')}
+            onClick={() => {
+              sendCallInvitation(screenContext, selectedChat.id)
+            }}
+          />
+        ),
       <DeltaMenuItem
         key='delete'
         text={tx('menu_delete_chat')}
@@ -147,17 +152,13 @@ export default function DeltaMenu(props: { selectedChat: FullChat }) {
           text={tx('menu_unmute')}
         />
       ),
-      <SettingsContext.Consumer>
-        {({ desktopSettings }) =>
-          desktopSettings.enableDisappearingMessages && (
-            <DeltaMenuItem
-              key='disappearing'
-              text={tx('ephemeral_messages')}
-              onClick={onDisappearingMessages}
-            />
-          )
-        }
-      </SettingsContext.Consumer>,
+      !isReadOnlyChat && (
+        <DeltaMenuItem
+          key='disappearing'
+          text={tx('ephemeral_messages')}
+          onClick={onDisappearingMessages}
+        />
+      ),
       <Menu.Divider key='divider-2' />,
     ]
   } else {
@@ -178,17 +179,10 @@ export default function DeltaMenu(props: { selectedChat: FullChat }) {
       />
       <DeltaMenuItem
         key='qr'
-        text={tx('qrshow_join_contact_title')}
+        text={tx('qr_code')}
         onClick={async () => {
           const qrCode = await DeltaBackend.call('chat.getQrCode', 0)
-          screenContext.openDialog('QrInviteCode', { qrCode })
-        }}
-      />
-      <DeltaMenuItem
-        key='importqr'
-        text={tx('qrscan_title')}
-        onClick={async () => {
-          screenContext.openDialog('ImportQrCode')
+          screenContext.openDialog('QrCode', { qrCode })
         }}
       />
       {chatMenu}

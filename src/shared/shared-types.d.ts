@@ -33,7 +33,6 @@ export interface DesktopSettings {
   lastAccount: string
   enableAVCalls: boolean
   enableOnDemandLocationStreaming: boolean
-  enableDisappearingMessages: boolean
   enterKeySends: boolean
   locale: string | null
   notifications: boolean
@@ -46,9 +45,6 @@ export interface DesktopSettings {
 }
 
 export interface AppState {
-  deltachat: {
-    credentials: Credentials
-  }
   saved: DesktopSettings
   logins: DeltaChatAccount[]
 }
@@ -66,6 +62,7 @@ export interface RC_Config {
 
 import { App } from 'electron'
 import { LocaleData } from '../shared/localize'
+import { QrState } from '../shared/constants'
 
 export interface ExtendedApp extends App {
   rc: RC_Config
@@ -146,9 +143,18 @@ export interface FullChat {
   draft: string
   selfInGroup: boolean
   muted: boolean
+  ephemeralTimer: number
 }
 
 type todo = any
+
+export interface MessageTypeAttachment {
+  url: string
+  contentType: string
+  fileName: string
+  fileSize: string
+}
+
 export interface MessageType {
   id: number
   msg: JsonMessage & {
@@ -156,12 +162,7 @@ export interface MessageType {
     receivedAt: number
     direction: 'outgoing' | 'incoming'
     status: todo
-    attachment?: {
-      url: string
-      contentType: string
-      fileName: string
-      fileSize: string
-    }
+    attachment?: MessageTypeAttachment
   }
   filemime: string
   filename: string
@@ -197,6 +198,8 @@ export type DeltaChatAccount = {
   displayname: string
   addr: string
   size: number
+  profileImage: string
+  color: string
 }
 
 // for video hangouts
@@ -211,4 +214,10 @@ export type BasicWebRTCOptions = {
   socketdomain: string
   /** true if socketDomain is given in base64 format */
   base64domain: boolean
+}
+
+export declare type QrCodeResponse = {
+  state: QrState
+  id: number
+  text1: string
 }
