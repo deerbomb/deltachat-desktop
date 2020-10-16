@@ -4,6 +4,7 @@
 
 # Added
 - Upgrade Emoji Picker(Emoji 12.1) and emojifont(Unicode 13.1) for new emoji support 🦾
+- Implement tray icon (huge thanks to @pepea28 for contributing & pushing this)
 
 ### Changed
 - Change "More info" translation to "Message Details"
